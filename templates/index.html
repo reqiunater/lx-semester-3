@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="author" content="Revyan Aldy Wilaga">
+    <meta name="description" content="LX Task Chapter 2">
+
+    <title>Chap - 2 || LX</title>
+    <!--
+  _____                                         _     _        __          ___ _                   
+ |  __ \                                  /\   | |   | |       \ \        / (_) |                  
+ | |__) |_____   ___   _  __ _ _ __      /  \  | | __| |_   _   \ \  /\  / / _| | __ _  __ _  __ _ 
+ |  _  // _ \ \ / / | | |/ _` | '_ \    / /\ \ | |/ _` | | | |   \ \/  \/ / | | |/ _` |/ _` |/ _` |
+ | | \ \  __/\ V /| |_| | (_| | | | |  / ____ \| | (_| | |_| |    \  /\  /  | | | (_| | (_| | (_| |
+ |_|  \_\___| \_/  \__, |\__,_|_| |_| /_/    \_\_|\__,_|\__, |     \/  \/   |_|_|\__,_|\__, |\__,_|
+                    __/ |                                __/ |                          __/ |      
+ __   _______ _____|___/_____ _  __    _   ____         |___/                          |___/       
+ \ \ / /_   _|_   _| |__   __| |/ /   | | |___ \                                                   
+  \ V /  | |   | |      | |  | ' /    | |   __) |                                                  
+   > <   | |   | |      | |  |  < _   | |  |__ <                                                   
+  / . \ _| |_ _| |_     | |  | . \ |__| |  ___) |                                                  
+ /_/ \_\_____|_____|    |_|  |_|\_\____/  |____/                                                   
+
+    -->
+
+    <link rel="stylesheet" href="../static/css/bootstrap.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    <script src="../static/js/bootstrap.bundle.min.js"></script>
+    <script src="../static/js/jquery-3.7.1.min.js.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        @media (max-width: 768px) {
+            .card-img-top {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <div class="top-title-container bg-white sticky-top border-bottom mb-3 p-3">
+            <div class="top-title d-flex justify-content-between container-md">
+                <div class="left w-100 p-2">
+                    <p class="fs-1 fw-bold mb-0">My Diary</p>
+                    <nav aria-label="breadcrumb mb-3">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item breadcrumb-home">Home</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-100 d-none" id="form-container">
+            <div class="form container">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="title" placeholder="Title">
+                    <label for="title">Title</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" placeholder="Description" id="description"
+                        style="height: 100px"></textarea>
+                    <label for="description">Description</label>
+                </div>
+                <div class="mb-3">
+                    <label for="bg_image" class="form-label">Background Image</label>
+                    <input class="form-control" type="file" id="bg_image">
+                </div>
+                <div class="mb-3 d-flex justify-content-end">
+                    <button type="button" class="btn btn-danger close-btn mx-1">Close</button>
+                    <button type="button" class="btn btn-success save-btn mx-1" onclick="post()">Save</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Main Container -->
+        <div class="container" id="main-container">
+            <!-- <div class="top-title d-flex justify-content-between sticky-top border-bottom mb-3">
+    
+            </div> -->
+            <div class="row row-cols-1 row-cols-md-3 g-4 mx-0 pb-5" id="card-container">
+            </div>
+        </div>
+
+    </main>
+    <script>
+        listing()
+        $(window).on('load', function () {
+            $('#title').on('keypress', function (e) {
+                if (e.which == 13) { // Enter key
+                    $('#description').focus();
+                }
+            });
+
+            $('#description').on('keypress', function (e) {
+                if (e.which == 13) {
+                    $('#bg_image').focus();
+                }
+            })
+            setTimeout(() => {
+                $('.placeholder').removeClass('placeholder');
+            }, 1000);
+        });
+
+        function listing() {
+            $.ajax({
+                type: "GET",
+                url: "/diary?sample_give=sample-data",
+                data: {},
+                success: function (res) {
+                    if (res.status !== 'success') {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: "Something went wrong while fetching the data. Please try again.",
+                            icon: 'error',
+                            showConfirmButton: true,
+                        });
+                    } else {
+                        $('#card-container').html('');
+                        let data = res.data;
+                        let i = 58;
+                        data.forEach(item => {
+                            let calculateTime;
+
+                            if (item.updated_at) {
+                                let updated_at = new Date(item.updated_at.replace(" ", "T"));
+                                calculateTime = timeAgo(updated_at);
+                            } else {
+                                let created_at = new Date(item.created_at.replace(" ", "T"));
+                                calculateTime = timeAgo(created_at);
+                            }
+
+                            $('#card-container').append(`
+                                <div class="col col-md-4 col-lg-3">
+                                    <div class="card h-100 placeholder-glow">
+                                        <img src="https://picsum.photos/id/${i++}/300/200" class="placeholder object-fit-cover card-img-top" alt="..."
+                                            style="max-width: 100%; height: 200px; object-fit: cover;">
+                                        <div class="card-body">
+                                            <h5 class="placeholder card-title">${item.title}</h5>
+                                            <p style="display: -webkit-box;-webkit-line-clamp: 3;-webkit-box-orient: vertical;overflow: hidden;text-overflow: ellipsis;"
+                                            class="placeholder lh-sm text-break card-text">${item.description}</p>
+                                        </div>
+                                        <div class="card-footer"><small class="placeholder text-body-secondary">Last updated ${calculateTime}</small></div>
+                                    </div>
+                                </div>`
+                            );
+                        });
+
+                        setTimeout(() => {
+                            $('.placeholder').removeClass('placeholder');
+                        }, 800);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error fetching diary entries:', error);
+                }
+            });
+        }
+
+        function post() {
+            let title = $('#title').val();
+            let description = $('#description').val();
+            if (!title) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: "Please fill out Title fields.",
+                    icon: 'error',
+                    timer: 2000,
+                    showConfirmButton: false,
+                }).then(() => {
+                    setTimeout(() => {
+                        $('#title').focus();
+                    }, 300);
+                });
+                return;
+            }
+
+            if (!description) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: "Please fill out Description fields.",
+                    icon: 'error',
+                    timer: 2000,
+                    showConfirmButton: false,
+                }).then(() => {
+                    setTimeout(() => {
+                        $('#description').focus();
+                    }, 300);
+                });
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/diary",
+                data: {
+                    title: title,
+                    description: description,
+                },
+                success: function (response) {
+                    if (response.status == 'success') {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Diary Added',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false,
+                        });
+                        title = $('#title').val('');
+                        description = $('#description').val('');
+                        $("#form-container").fadeOut(500, function () {
+                            $('#main-container').fadeIn();
+
+                            // Tampilkan tombol tambah kembali dan sembunyikan form-container
+                            $('.insert-btn').removeClass('d-none').addClass('d-block');
+                            $('#form-container').addClass('d-none').removeClass('d-block');
+                            $('#main-container').removeClass('d-none').addClass('d-block');
+                        });
+                        listing();
+                        $('.breadcrumb').html(`<li class="breadcrumb-item breadcrumb-home">Home</li>`);
+                    }
+                }
+            });
+        }
+
+        function timeAgo(date) {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now - date) / 1000);
+
+            const minutes = Math.floor(diffInSeconds / 60);
+            const hours = Math.floor(diffInSeconds / 3600);
+            const days = Math.floor(diffInSeconds / 86400);
+            const months = Math.floor(diffInSeconds / 2592000);
+            const years = Math.floor(diffInSeconds / 31536000);
+
+            if (years > 0) {
+                return years === 1 ? "1 year ago" : years + " years ago";
+            } else if (months > 0) {
+                return months === 1 ? "1 month ago" : months + " months ago";
+            } else if (days > 0) {
+                return days === 1 ? "1 day ago" : days + " days ago";
+            } else if (hours > 0) {
+                return hours === 1 ? "1 hour ago" : hours + " hours ago";
+            } else if (minutes > 0) {
+                return minutes === 1 ? "1 minute ago" : minutes + " minutes ago";
+            } else {
+                return diffInSeconds <= 30 ? "just now" : diffInSeconds + " seconds ago";
+            }
+        }
+
+        $(document).ready(function () {
+            if (window.matchMedia('(min-width: 768px)').matches) {
+                $('.top-title').append(`           
+                    <div class="right d-flex justify-content-center insert-btn-container align-items-center">
+                        <button type="button" class="btn btn-primary d-flex justify-content-center align-items-center insert-btn" style="height: 2.5em; width: 10em;">
+                            <i class="fa fa-plus me-1"></i>Tambah
+                        </button>
+                    </div>
+                `);
+            } else {
+                $('.top-title').append(`
+                    <div class="fixed-bottom relative insert-btn-container" style="height: 100px;">
+                        <button type="button"
+                            class="insert-btn btn btn-primary d-flex justify-content-center align-items-center rounded-circle position-absolute top-50 end-0 translate-middle h-100"
+                            style="width: 70px !important; height: 70px !important;">
+                            <i class="fa fa-plus fs-1 w-100"></i>
+                        </button>
+                    </div>
+                `);
+            }
+
+            $(document).on('click', '.insert-btn', function () {
+                $('.breadcrumb').append(`<li class="breadcrumb-item active" aria-current="page">Insert</li>`);
+                $('.breadcrumb-home').html('<a href="#">Home</a>').addClass('close-btn');
+                $("#main-container").fadeOut(200, function () {
+                    $('#form-container').fadeIn();
+
+                    // Sembunyikan tombol tambah dan tampilkan form-container
+                    $('.insert-btn').addClass('d-none').removeClass('d-block');
+                    $('#form-container').addClass('d-block').removeClass('d-none');
+                    $('#main-container').addClass('d-none').removeClass('d-block');
+                });
+            });
+
+            $(document).on('click', '.close-btn', function () {
+                $('.breadcrumb').html(`<li class="breadcrumb-item breadcrumb-home">Home</li>`);
+                $('.breadcrumb-home').removeClass('close-btn');
+                $("#form-container").fadeOut(200, function () {
+                    $('#main-container').fadeIn();
+
+                    // Tampilkan tombol tambah kembali dan sembunyikan form-container
+                    $('.insert-btn').removeClass('d-none').addClass('d-block');
+                    $('#form-container').addClass('d-none').removeClass('d-block');
+                    $('#main-container').removeClass('d-none').addClass('d-block');
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>
